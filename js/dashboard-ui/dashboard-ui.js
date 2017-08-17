@@ -35,7 +35,7 @@ var DashboardUI = DashboardUI || {
 
 
 		// Form controls
-		$('form.async').live('submit', function( e ) {
+		$('form.async').on(document, 'submit', function( e ) {
 			e.preventDefault();
 			var id = DashboardForm.submitForm( this, function( data ) {
 				$(this).find('input[name="list_id"]').val( data );
@@ -79,6 +79,14 @@ var DashboardUI = DashboardUI || {
 			}
 		}
 	},
+	dialog: function ( msg, type ) {
+		if ( bootbox ) {
+			bootbox.dialog(msg);
+		} else {
+			console.log( msg );
+			window.status = msg;
+		}
+	},
 	notice: function ( msg, type ) {
 		if ( toastr ) {
 			type = type ? type : 'success';
@@ -94,6 +102,11 @@ var DashboardUI = DashboardUI || {
 		} else {
 			console.log( msg );
 			window.status = msg;
+		}
+	},
+	clearDialogs: function() {
+		if ( bootbox ) {
+			bootbox.hideAll();
 		}
 	},
 	//Tabdrop Functions
@@ -166,6 +179,16 @@ var DashboardUI = DashboardUI || {
 		});
 	},
 	// Navigation
+	redirect: function( url ) {
+		var url = $('.link').val();
+		var prot = url.substring(0,4);
+		var path = url.substring(0,2);
+		if (prot != 'http' && path != './')
+			url = './'+url;
+		window.location.href = url;
+		// window.open(url);
+		return false;
+	},
 	navigate: function( page )
 	{
 
@@ -182,7 +205,10 @@ var DashboardUI = DashboardUI || {
 			var destination = ( (window.location.hash) ? window.location.hash.substr(2):dash.home );
 			var $menuitem = $(this.menuClass + ' a[href="'+destination+'"]');
 			var file = this.moduleDir + ( page ? page : destination );
-	
+			if ( this.panel.length < 1 ) { // TODO: check is module exists
+				this.redirect(page);
+				return false;
+			}
 			$(this.panel).fadeTo(100, .33, function() 
 			{
 				if ( $menuitem.is(':visible'))
