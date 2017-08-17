@@ -23,12 +23,12 @@ var DashboardResponse = {
 			if ( response.hasOwnProperty('id') )
 				this.id = response.id;
 
-			if ( response.hasOwnProperty('query') )
-				this.query = response.query;
+			if ( response.hasOwnProperty('info') )
+				this.info = response.query;
 
 			if ( response.hasOwnProperty('children') )
 				this.children = response.children;
-
+			
 		} catch(e) {
 			console.log( "Response cannot be parsed as JSON" );
 			this.data = result;
