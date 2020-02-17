@@ -24,9 +24,9 @@ var RecordSet = RecordSet || {
 		var record = null;
 		if ( id != undefined ) {
 			record = this.records[id];
-		} else if ( this.index in this.records)
+		} else if ( this.index in this.records) {
 			record = this.records[this.index];
-		} else if {
+		} else {
 			this.fetch();
 			record = this.records[this.index];
 		}

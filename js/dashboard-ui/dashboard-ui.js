@@ -5,12 +5,17 @@ var DashboardUI = DashboardUI || {
 	panel: '.page-content',
 	logoutTimer: null,
 	focused: true,
-	home: 'lists',
+	root: '/',
+	home: 'dashboard/',
 	moduleDir: 'modules/',
 	menuClass: '.page-sidebar',
+	subMenuClass: 'sub-menu',
+	menuItemActiveClass: 'active',
 	menuItemClass: 'ul li a',
 	
 	init: function() {
+		var dash = this;
+
 		toastr.options = {
 			"closeButton": false,
 			"debug": false,
@@ -30,9 +35,12 @@ var DashboardUI = DashboardUI || {
 		}
 
 		window.addEventListener('blur', function() {
-		    focused = false;
+		    dash.focused = false;
 		});
 
+		window.addEventListener('focus', function() {
+		    dash.focused = true;
+		});
 
 		// Form controls
 		$('form.async').on(document, 'submit', function( e ) {
@@ -50,7 +58,7 @@ var DashboardUI = DashboardUI || {
 	},
 	// Dialog methods
 	alert: function( msg, callback ) {
-		if ( bootbox ) {
+		if ( typeof bootbox !== "undefined" ) {
 			bootbox.alert( msg, callback );
 		} else {
 			alert( msg );
@@ -58,18 +66,18 @@ var DashboardUI = DashboardUI || {
 		}
 	},
 	confirm: function( msg, callback ) {
-		if ( bootbox ) {
+		if ( typeof bootbox !== "undefined" ) {
 			bootbox.confirm( msg, callback );
 		} else {
 			var result = confirm( msg );
 			
-			if ( result != null ) {
+			if ( result != false ) {
 				callback.call( result );
 			}
 		}
 	},
 	prompt: function ( msg, callback ) {
-		if ( bootbox ) {
+		if ( typeof bootbox !== "undefined" ) {
 			bootbox.prompt( msg, callback );
 		} else {
 			var result = prompt( msg );
@@ -80,7 +88,7 @@ var DashboardUI = DashboardUI || {
 		}
 	},
 	dialog: function ( msg, type ) {
-		if ( bootbox ) {
+		if ( typeof bootbox !== "undefined" ) {
 			bootbox.dialog(msg);
 		} else {
 			console.log( msg );
@@ -88,7 +96,7 @@ var DashboardUI = DashboardUI || {
 		}
 	},
 	notice: function ( msg, type ) {
-		if ( toastr ) {
+		if ( typeof toastr !== "undefined" ) {
 			type = type ? type : 'success';
 			toastr[type]( msg );
 		} else if( $('.header .'+type).length ) {
@@ -105,7 +113,7 @@ var DashboardUI = DashboardUI || {
 		}
 	},
 	clearDialogs: function() {
-		if ( bootbox ) {
+		if ( typeof bootbox !== "undefined" ) {
 			bootbox.hideAll();
 		}
 	},
@@ -201,7 +209,7 @@ var DashboardUI = DashboardUI || {
 		*/
 		if (page != 'expand')
 		{
-			var dash = this;
+			var dash = DashboardUI || this;
 			var destination = ( (window.location.hash) ? window.location.hash.substr(2):dash.home );
 			var $menuitem = $(this.menuClass + ' a[href="'+destination+'"]');
 			var file = this.moduleDir + ( page ? page : destination );
@@ -209,18 +217,21 @@ var DashboardUI = DashboardUI || {
 				this.redirect(page);
 				return false;
 			}
-			$(this.panel).fadeTo(100, .33, function() 
+
+			if ( $menuitem.is(':visible'))
 			{
-				if ( $menuitem.is(':visible'))
-				{
-					$(this.menuClass).find('.active').removeClass('active').removeClass('start').removeClass('open').find('.arrow').removeClass('open');
-					
-					if ( $menuitem.parent().parent().hasClass('sub-menu') )
-						$menuitem.parent().addClass('active').parent().addClass('active');
-					else
-						$menuitem.parent().addClass('active').find('.arrow').addClass('open');
+				$(dash.menuClass).find('.'+dash.menuItemActiveClass).removeClass(dash.menuItemActiveClass).removeClass('start').removeClass('open').find('.arrow').removeClass('open');
+				
+				if ( $menuitem.parent().parent().hasClass(dash.subMenuClass) ) {
+					$menuitem.parent().addClass(dash.menuItemActiveClass).parent().addClass(dash.menuItemActiveClass);
+				} else {
+					$menuitem.parent().addClass(dash.menuItemActiveClass).find('.arrow').addClass('open');
 				}
 
+			}
+
+			$(this.panel).fadeTo(100, .33, function() 
+			{
 			 	$(dash.panel).load(file, function() 
 				 {
 					 $(dash.panel).fadeTo(100, 1 );
@@ -237,7 +248,6 @@ var DashboardUI = DashboardUI || {
 	},
 	//Load initial content
 	goHome: function() {
-		
 		this.navigate();
 	},
 	menuClick: function( e ) {
@@ -256,27 +266,33 @@ var DashboardUI = DashboardUI || {
 		{
 			dash.navigate( $(this).attr("href") );
 
-			if ( $(this).parent().parent().hasClass('sub-menu') )
+			if ( $(this).parent().parent().hasClass(dash.subMenuClass) )
 			{
-				$(this).parent().parent().parent().addClass('clicked').parent().find('.active').removeClass('active').parent().find('.clicked').removeClass('clicked').addClass('active');
-				$(this).parent().addClass('active');
+				$(this).parent().parent().parent().addClass('clicked').parent().find('.'+dash.menuItemActiveClass).removeClass(dash.menuItemActiveClass).parent().find('.clicked').removeClass('clicked').addClass(dash.menuItemActiveClass);
+				$(this).parent().addClass(dash.menuItemActiveClass);
 			}
-			else if ( $(this).parent().find('.sub-menu').length > 0 )
+			else if ( $(this).parent().find('.'+dash.subMenuClass).length > 0 )
 			{
 				// Do nothing
 			}
 			else
 			{
-				$(this).parent().addClass('clicked').parent().find('.active').removeClass('active').parent().find('.clicked').removeClass('clicked').addClass('active');
+				var $last_button = $(this).parent().addClass('clicked').parent().find('.'+dash.menuItemActiveClass);
+				if ($last_button.length > 0) {
+					$last_button.removeClass(dash.menuItemActiveClass).parent().find('.clicked').removeClass('clicked').addClass(dash.menuItemActiveClass);
+				} else {
+					$(this).parent().removeClass('clicked').addClass(dash.menuItemActiveClass);
+				}
 			}
 		}
-		else if ( $(this).parent().find('.sub-menu').length > 0 )
+		else if ( $(this).parent().find('.'+dash.subMenuClass).length > 0 )
 		{
 			// Do nothing
 		}
 		else
 		{
-			$(this).parent().addClass('clicked').parent().find('.active').removeClass('active').parent().find('.clicked').removeClass('clicked').addClass('active');
+			$(this).parent().addClass('clicked').parent().find('.'+dash.menuItemActiveClass).removeClass(dash.menuItemActiveClass).parent().find('.clicked').removeClass('clicked').addClass(dash.menuItemActiveClass);
+
 			window.open( $(this).attr("href"));
 		}
 	},
@@ -309,18 +325,34 @@ var DashboardUI = DashboardUI || {
 			return function() {   //Return a function in the context of 'self'
 				self.warnLogout(); //Thing you wanted to run as non-window 'this'
 			}
-		})(this),(60*60*1000) - (60*5*1000));
+		})(this),(60*60*1000) - (60*1*1000));
 	},
 	resetInterval: function() {
-	
+		var dash = DashboardUI;
 		clearInterval(this.logoutTimer);
-		
+
+		$.ajax({
+			url: this.root,
+			data: {'login': true},
+			method: 'POST'
+		}).done(function( response ) {
+			var reply = DashboardResponse.parse( response );
+			if ( reply.data == false ) {
+				dash.autoLogout();
+				return;
+			}
+
+			DashboardUI.notice( reply.status );
+			dash.logoutInterval();
+		});
+		/*
 		this.logoutTimer = setInterval( (function(self) { 
 			//Self-executing func which takes 'this' as self
 			return function() {   //Return a function in the context of 'self'
 				self.warnLogout(); //Thing you wanted to run as non-window 'this'
 			}
 		})(this),(60*60*1000) - (60*5*1000));
+		*/
 	},
 	warnLogout: function() {
 		clearInterval(this.logoutTimer);
@@ -329,11 +361,11 @@ var DashboardUI = DashboardUI || {
 			return function() {   //Return a function in the context of 'self'
 				self.autoLogout(); //Thing you wanted to run as non-window 'this'
 			}
-		})(this),60*5*1000);
+		})(this),60*1*1000);
 		this.confirm("Do you want to stay logged in?", this.resetInterval);
 	},
 	autoLogout: function() {
-		if ( focused )
+		if ( this.focused )
 			window.location = window.location.href.replace(window.location.hash, '')+'?logout=true';
 	}
 };
