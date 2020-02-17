@@ -16,7 +16,7 @@ var DashboardModule = DashboardModule || {
 	recordSet: {},
 	index: 0,
 	current: {},
-	init: () {
+	init: function() {
 		DashboardUI = DashboardUI || {};
 
 		var module = this;
